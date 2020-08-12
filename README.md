@@ -14,8 +14,6 @@ Orientation: Portrait only
 
 Developer: Nikolaev Gleb
 
-This application is created without third-party frameworks
-
 Functionality of Application:
 
   - Fetching Data from API (Example - https://revolut.duckdns.org/latest?base=EUR)
