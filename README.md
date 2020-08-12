@@ -6,7 +6,7 @@ Architectural Pattern: MVC
 
 Language: Swift
 
-Deployment Target: iOS 13.3
+Deployment Target: iOS 13.4
 
 Device Type : iPhone
 
