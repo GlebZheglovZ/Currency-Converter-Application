@@ -162,7 +162,7 @@ class CurrencyRatesViewController: UIViewController {
    @objc func keyboardWillShow(notification: NSNotification) {
     if let keyboardHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height {
             UIView.animate(withDuration: 0.2, animations: {
-                self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight + 10, right: 0)
+                self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
             })
         }
     }
