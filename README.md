@@ -14,6 +14,8 @@ Orientation: Portrait only
 
 Developer: Nikolaev Gleb
 
+UI: Programatically
+
 Functionality of Application:
 
   - Fetching Data from API (Example - https://revolut.duckdns.org/latest?base=EUR)
