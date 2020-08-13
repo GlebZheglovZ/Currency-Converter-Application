@@ -14,7 +14,7 @@ Orientation: Portrait only
 
 Developer: Nikolaev Gleb
 
-UI: Programatically
+UI: Programmatically/Custom Table View Cells with Storyboard (xib)
 
 Functionality of Application:
 
