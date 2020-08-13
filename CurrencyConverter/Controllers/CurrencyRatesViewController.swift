@@ -37,7 +37,7 @@ class CurrencyRatesViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // setupKeyboardObservers()
+        setupKeyboardObservers()
         timer = Timer.scheduledTimer(timeInterval: 1,
                                      target: self,
                                      selector: #selector(fetchDataFromAPI),
@@ -186,6 +186,7 @@ class CurrencyRatesViewController: UIViewController {
     @objc func keyboardWillShow(notification: NSNotification) {
         if let keyboardHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height {
             UIView.animate(withDuration: 0.2, animations: {
+                self.reloadDataForTableView()
                 self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
             })
         }
@@ -193,6 +194,7 @@ class CurrencyRatesViewController: UIViewController {
     
     @objc func keyboardWillHide(notification: NSNotification) {
         UIView.animate(withDuration: 0.2, animations: {
+            self.reloadDataForTableView()
             self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         })
     }
