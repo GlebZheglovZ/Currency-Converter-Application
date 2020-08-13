@@ -9,8 +9,8 @@
 import Foundation
 
 struct Currencies: Decodable {
-    let base, date: String
-    let rates: [String: Double]
+    let base, date: String?
+    let rates: [String: Double]?
 }
 
 typealias Currency = (key: String, value: Double)

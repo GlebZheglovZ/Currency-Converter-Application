@@ -18,7 +18,7 @@ final class NetworkManager {
     
     // MARK: - Инициализаторы
     init() {
-        sessionConfiguration.timeoutIntervalForResource = 10
+        sessionConfiguration.timeoutIntervalForResource = 5
         sessionConfiguration.waitsForConnectivity = false
         session = URLSession(configuration: sessionConfiguration)
         queue = DispatchQueue.global(qos: .background)
@@ -33,7 +33,8 @@ final class NetworkManager {
         
         let task = session.dataTask(with: queryURL) { (data, response, error) in
             if let error = error {
-                print("Error founded: \(error.localizedDescription)")
+                print("Error founded: \(error.localizedDescription.capitalized)")
+                completionHandler(nil, nil, error)
             } else if let receivedResponse = response as? HTTPURLResponse,
                 (200..<300) ~= receivedResponse.statusCode,
                 let receivedData = data {
@@ -56,12 +57,12 @@ final class NetworkManager {
     func validate(response: HTTPURLResponse?, error: Error?, completionHandler: (@escaping (String, String) -> Void)) {
         if let response = response {
             if (400...499) ~= response.statusCode {
-                completionHandler("Ошибка", "Произошла ошибка на стороне клиента\nПожалуйста повторите попытку позднее")
+                completionHandler("Network Error", "Receiver client error: \(response.statusCode) \nPlease try again later")
             } else if (500...599) ~= response.statusCode {
-                completionHandler("Ошибка", "Произошла ошибка на стороне сервера\nПожалуйста, повторите попытку позднее")
+                completionHandler("Network Error", "Received server error: \(response.statusCode) \nPlease try again later")
             }
         } else if let error = error {
-            completionHandler("Ошибка", error.localizedDescription)
+            completionHandler("Network Error", error.localizedDescription)
         }
     }
     

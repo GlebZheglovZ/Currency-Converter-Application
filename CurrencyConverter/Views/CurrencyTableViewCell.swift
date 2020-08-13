@@ -45,4 +45,8 @@ class CurrencyTableViewCell: UITableViewCell {
         currencyTextField.createDoneButton()
     }
     
+    func formatCurrencyValue(for value: Double) {
+        currencyTextField.text = String(format: "%.2f", value)
+    }
+    
 }

@@ -11,14 +11,19 @@ import UIKit
 class CurrencyRatesViewController: UIViewController {
     
     // MARK: - Свойства
+    
+    // UI
     private let tableView = UITableView()
     private let reconnectButton = UIButton()
     private let customNavigationBarTitleLabel = UILabel()
+    private let activityIndicator = UIActivityIndicatorView()
     private var safeArea: UILayoutGuide!
+    // Менеджеры
     private let networkManager = NetworkManager()
     private var timer: Timer!
     private var date: Date!
     private var dateFormatter: DateFormatter!
+    // Рабочие значения
     private var defaultCurrencyRateValue = 1.0
     private var selectedCurrency = "EUR"
     private var selectedIndexPath = IndexPath(row: 0, section: 0)
@@ -27,15 +32,12 @@ class CurrencyRatesViewController: UIViewController {
     // MARK: - Методы UIViewController
     override func loadView() {
         super.loadView()
-        setupMainView()
-        setupTableView()
-        setupReconnectButton()
+        setupUI()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupNavigationBar()
-        setupKeyboardObservers()
+        // setupKeyboardObservers()
         timer = Timer.scheduledTimer(timeInterval: 1,
                                      target: self,
                                      selector: #selector(fetchDataFromAPI),
@@ -55,7 +57,7 @@ class CurrencyRatesViewController: UIViewController {
         customNavigationBarTitleLabel.numberOfLines = 2
         customNavigationBarTitleLabel.font = UIFont.boldSystemFont(ofSize: 16)
         customNavigationBarTitleLabel.textAlignment = .center
-        customNavigationBarTitleLabel.textColor = .systemGray
+        customNavigationBarTitleLabel.textColor = .black
         customNavigationBarTitleLabel.text = "Currency Converter\n"
         self.navigationItem.titleView = customNavigationBarTitleLabel
     }
@@ -78,14 +80,36 @@ class CurrencyRatesViewController: UIViewController {
     
     func setupReconnectButton() {
         view.addSubview(reconnectButton)
+        reconnectButton.translatesAutoresizingMaskIntoConstraints = false
         reconnectButton.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
         reconnectButton.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         reconnectButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         reconnectButton.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        reconnectButton.isHidden = true
+        reconnectButton.backgroundColor = .systemBackground
+        reconnectButton.tintColor = .black
+        reconnectButton.titleLabel?.textAlignment = .center
         reconnectButton.titleLabel?.numberOfLines = 0
         reconnectButton.setTitle("Нажмите на экран чтобы запросить курс валют с сервера", for: .normal)
         reconnectButton.addTarget(self, action: #selector(reconnectToServer), for: .touchUpInside)
-        reconnectButton.isHidden = true
+    }
+    
+    func setupActivityIndicator() {
+        view.addSubview(activityIndicator)
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        activityIndicator.style = .large
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.isHidden = true
+    }
+    
+    func setupUI() {
+        setupMainView()
+        setupNavigationBar()
+        setupTableView()
+        setupReconnectButton()
+        setupActivityIndicator()
     }
     
     func hideUI(_ isHidden: Bool) {
@@ -111,13 +135,13 @@ class CurrencyRatesViewController: UIViewController {
             // 1. Инициализируем пустой массив который будет хранить в себе IndexPath'ы отображаемых ячеек
             var indexPathsForVisibleRows = [IndexPath]()
             
-            // 2. Пытаемся развернуть значение из self.tableView.indexPathaForVisibleRows
+            // 2. Пытаемся развернуть значения из tableView.indexPathaForVisibleRows
             if let unwrappedIndexPathsForVisibleRows = self?.tableView.indexPathsForVisibleRows {
                 // 3. Присваиваем извлеченные значения в массив indexPathForVisibleRows
                 indexPathsForVisibleRows = unwrappedIndexPathsForVisibleRows
             }
             
-            // 4. Если indexPathForVisibleRows пустое то просто делаем reloadData для всей таблицы
+            // 4. Если indexPathForVisibleRows пустое, то просто делаем reloadData для всей таблицы
             if indexPathsForVisibleRows.isEmpty {
                 self?.tableView.reloadData()
                 // 5. В противном случае проходимся по элементам массива indexPathsForVisibleRows
@@ -127,7 +151,7 @@ class CurrencyRatesViewController: UIViewController {
                     // 7. Кастим ячейку до типа CurrencyTableViewCell
                     if let cell = self?.tableView.cellForRow(at: indexPath) as? CurrencyTableViewCell {
                         /* 8. Если аббревиатура валюты в ячейке совпадает с текущей валютой,
-                        то удаляем по индексу найденный элемент */
+                         то удаляем по индексу найденный элемент */
                         if cell.currencyNameLabel.text == self?.selectedCurrency {
                             indexPathsForVisibleRows.remove(at: index)
                         }
@@ -159,14 +183,14 @@ class CurrencyRatesViewController: UIViewController {
         textfield.addTarget(self, action: #selector(textFieldDidTapped(_:)), for: UIControl.Event.editingDidBegin)
     }
     
-   @objc func keyboardWillShow(notification: NSNotification) {
-    if let keyboardHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height {
+    @objc func keyboardWillShow(notification: NSNotification) {
+        if let keyboardHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height {
             UIView.animate(withDuration: 0.2, animations: {
                 self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
             })
         }
     }
-
+    
     @objc func keyboardWillHide(notification: NSNotification) {
         UIView.animate(withDuration: 0.2, animations: {
             self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
@@ -185,13 +209,26 @@ class CurrencyRatesViewController: UIViewController {
         return convertedValue
     }
     
+    private func isCharactersAllowed(for string: String) -> Bool {
+        let allowedChars = "1234567890."
+        let allowedCharsSet = CharacterSet(charactersIn: allowedChars)
+        let typedCharsSet = CharacterSet(charactersIn: string)
+        let isTypedCharsAllowed = allowedCharsSet.isSuperset(of: typedCharsSet)
+        return isTypedCharsAllowed
+    }
+    
     private func sortCurrencies(_ currencies: Currencies) -> [Currency] {
-        var currencies = Array(currencies.rates)
-        currencies.append((selectedCurrency, defaultCurrencyRateValue))
-        currencies = currencies.sorted { (element1, element2) -> Bool in
-            element1.key < element2.key
+        var sortedCurrencies = [Currency]()
+        
+        if let rates = currencies.rates {
+            sortedCurrencies = Array(rates)
+            sortedCurrencies.append((selectedCurrency, defaultCurrencyRateValue))
+            sortedCurrencies = sortedCurrencies.sorted { (element1, element2) -> Bool in
+                element1.key < element2.key
+            }
         }
-        return currencies
+        
+        return sortedCurrencies
     }
     
     private func showRequestTimeOnNavigationBar() {
@@ -217,11 +254,14 @@ class CurrencyRatesViewController: UIViewController {
     @objc func fetchDataFromAPI() {
         networkManager.getCurrenciesRates(for: selectedCurrency) { [weak self] (currencies, response, error) in
             self?.showRequestTimeOnNavigationBar()
-           
+            
             self?.networkManager.validate(response: response, error: error) { (title, message) in
+                self?.hideUI(true)
                 self?.showAlertController(withTitle: title, message: message)
-                self?.timer.invalidate()
-                self?.timer = nil
+                if self?.timer != nil {
+                    self?.timer.invalidate()
+                    self?.timer = nil
+                }
             }
             
             if let currencies = currencies, let arrayOfCurrencies = self?.sortCurrencies(currencies) {
@@ -229,17 +269,25 @@ class CurrencyRatesViewController: UIViewController {
                 self?.reloadDataForTableView()
             }
             
+            
+            DispatchQueue.main.async {
+                if !(self!.activityIndicator.isHidden) {
+                    self?.activityIndicator.stopAnimating()
+                }
+            }
         }
     }
     
     @objc func reconnectToServer() {
+        hideUI(false)
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
         fetchDataFromAPI()
         timer = Timer.scheduledTimer(timeInterval: 1,
                                      target: self,
                                      selector: #selector(fetchDataFromAPI),
                                      userInfo: nil,
                                      repeats: true)
-        hideUI(false)
     }
     
 }
@@ -259,7 +307,7 @@ extension CurrencyRatesViewController: UITableViewDelegate, UITableViewDataSourc
         setupTargetsForTextFields(for: cell.currencyTextField, at: indexPath)
         
         if indexPath != selectedIndexPath {
-            cell.currencyTextField.text = String(format: "%.3f", defaultCurrencyRateValue * currency.value)
+            cell.formatCurrencyValue(for: defaultCurrencyRateValue * currency.value)
         }
         
         return cell
@@ -271,10 +319,7 @@ extension CurrencyRatesViewController: UITableViewDelegate, UITableViewDataSourc
 extension CurrencyRatesViewController: UITextFieldDelegate {
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let currentText = textField.text ?? ""
-        guard let stringRange = Range(range, in: currentText) else { return false }
-        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
-        return updatedText.count <= 10 && string.rangeOfCharacter(from: CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")) == nil
+        return isCharactersAllowed(for: string)
     }
     
 }
