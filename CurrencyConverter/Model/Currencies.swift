@@ -14,7 +14,6 @@ struct Currencies: Decodable {
     
     func sortCurrenciesRates(withSelectedCurrency selectedCurrency: String, currencyRateValue: Double) -> [Currency] {
         var sortedCurrencies = [Currency]()
-        
         if let rates = self.rates {
             sortedCurrencies = Array(rates)
             sortedCurrencies.append((selectedCurrency, currencyRateValue))
@@ -22,7 +21,6 @@ struct Currencies: Decodable {
                 element1.key < element2.key
             }
         }
-        
         return sortedCurrencies
     }
 }
