@@ -20,6 +20,7 @@ class CurrencyRatesViewController: UIViewController {
     private var safeArea: UILayoutGuide!
     // Менеджеры
     private let networkManager = NetworkManager()
+    private let backgroundQueue = DispatchQueue.global(qos: .background)
     private var timer: Timer!
     private var date: Date!
     private var dateFormatter: DateFormatter!
@@ -116,14 +117,19 @@ class CurrencyRatesViewController: UIViewController {
         DispatchQueue.main.async {
             self.tableView.isHidden = isHidden
             self.reconnectButton.isHidden = !isHidden
+            self.activityIndicator.isHidden = self.reconnectButton.isHidden && self.tableView.isHidden ? false : true
+            isHidden ? self.activityIndicator.startAnimating() : self.activityIndicator.stopAnimating()
         }
     }
     
     private func showAlertController(withTitle title: String, message: String) {
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-            let alertAction = UIAlertAction(title: "OK", style: .default) { (_) in
-                self.hideUI(true)
+            let alertAction = UIAlertAction(title: "OK", style: .default) { [weak self] (_) in
+                if self?.timer != nil {
+                    self?.timer.invalidate()
+                    self?.timer = nil
+                }
             }
             alertController.addAction(alertAction)
             self.present(alertController, animated: true)
@@ -166,7 +172,6 @@ class CurrencyRatesViewController: UIViewController {
     
     @objc func textFieldDidChange(_ textField: UITextField) {
         defaultCurrencyRateValue = convertTextField(textField: textField) ?? defaultCurrencyRateValue
-        fetchDataFromAPI()
     }
     
     @objc func textFieldDidTapped(_ textField: UITextField) {
@@ -235,8 +240,8 @@ class CurrencyRatesViewController: UIViewController {
     }
     
     private func showRequestTimeOnNavigationBar() {
-        let attributedDataString = getCurrentDataInString()
         DispatchQueue.main.async {
+            let attributedDataString = self.getCurrentDataInString()
             let customNavigationBarTitle = self.navigationItem.titleView as! UILabel
             customNavigationBarTitle.attributedText = attributedDataString
         }
@@ -244,43 +249,30 @@ class CurrencyRatesViewController: UIViewController {
     
     // MARK: - Работа с сетью
     @objc func fetchDataFromAPI() {
-        networkManager.getCurrenciesRates(for: selectedCurrency) { [weak self] (currencies, response, error) in
-            self?.showRequestTimeOnNavigationBar()
-            
-            self?.networkManager.validate(response: response, error: error) { (title, message) in
-                self?.hideUI(true)
-                self?.showAlertController(withTitle: title, message: message)
-                if self?.timer != nil {
-                    self?.timer.invalidate()
-                    self?.timer = nil
+        backgroundQueue.async {
+            self.networkManager.getCurrenciesRates(for: self.selectedCurrency) { [weak self] (currencies, response, error) in
+                self?.showRequestTimeOnNavigationBar()
+                
+                self?.networkManager.validate(response: response, error: error) { (title, message) in
+                    self?.showAlertController(withTitle: title, message: message)
                 }
-            }
-            
-            if let currencies = currencies {
-                self?.receivedCurrenciesRates = currencies.sortCurrenciesRates(withSelectedCurrency: self!.selectedCurrency,
-                                                                               currencyRateValue: self!.defaultCurrencyRateValue)
-                self?.reloadDataForTableView()
-            }
-            
-            DispatchQueue.main.async {
-                if !(self!.activityIndicator.isHidden) {
-                    self?.activityIndicator.stopAnimating()
-                    self?.tableView.isHidden = false
+                
+                if let currencies = currencies {
+                    self?.receivedCurrenciesRates = currencies.sortCurrenciesRates(withSelectedCurrency: self!.selectedCurrency,
+                                                                                   currencyRateValue: self!.defaultCurrencyRateValue)
+                    self?.reloadDataForTableView()
+                    self?.timer = Timer.scheduledTimer(timeInterval: 1, target: self!, selector: #selector(self?.fetchDataFromAPI), userInfo: nil, repeats: true)
                 }
+                
+                self?.hideUI(false)
             }
         }
     }
     
     @objc func reconnectToServer() {
         reconnectButton.isHidden = true
-        activityIndicator.isHidden = false
-        activityIndicator.startAnimating()
+        hideUI(true)
         fetchDataFromAPI()
-        timer = Timer.scheduledTimer(timeInterval: 1,
-                                     target: self,
-                                     selector: #selector(fetchDataFromAPI),
-                                     userInfo: nil,
-                                     repeats: true)
     }
     
 }

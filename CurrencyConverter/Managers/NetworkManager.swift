@@ -14,14 +14,12 @@ final class NetworkManager {
     private let baseURL = "https://revolut.duckdns.org/latest"
     private let sessionConfiguration = URLSessionConfiguration.default
     private let session: URLSession
-    private let queue: DispatchQueue
     
     // MARK: - Инициализаторы
     init() {
         sessionConfiguration.timeoutIntervalForResource = 3
         sessionConfiguration.waitsForConnectivity = false
         session = URLSession(configuration: sessionConfiguration)
-        queue = DispatchQueue.global(qos: .background)
     }
     
     // MARK: - Методы
@@ -31,7 +29,7 @@ final class NetworkManager {
         components?.queryItems = [URLQueryItem(name: "base", value: currency)]
         guard let queryURL = components?.url else { return }
         
-        let task = session.dataTask(with: queryURL) { (data, response, error) in
+        session.dataTask(with: queryURL) { (data, response, error) in
             if let error = error {
                 print("Error founded: \(error.localizedDescription.capitalized)")
                 completionHandler(nil, nil, error)
@@ -47,11 +45,8 @@ final class NetworkManager {
                     print("Can't decode data for type: \(Currencies.self)")
                 }
             }
-        }
+        }.resume()
         
-        queue.async {
-            task.resume()
-        }
     }
     
     func validate(response: HTTPURLResponse?, error: Error?, completionHandler: (@escaping (String, String) -> Void)) {

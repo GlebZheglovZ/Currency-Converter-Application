@@ -23,6 +23,7 @@ struct Currencies: Decodable {
         }
         return sortedCurrencies
     }
+    
 }
 
 typealias Currency = (key: String, value: Double)
