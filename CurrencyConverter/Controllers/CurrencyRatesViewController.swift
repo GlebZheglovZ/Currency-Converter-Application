@@ -40,6 +40,8 @@ class CurrencyRatesViewController: UIViewController {
         super.viewDidLoad()
         setupKeyboardObservers()
         initializeTimer()
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
     }
     
     // MARK: - Работа с UI
