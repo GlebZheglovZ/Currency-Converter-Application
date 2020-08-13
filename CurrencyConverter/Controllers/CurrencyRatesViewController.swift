@@ -219,21 +219,7 @@ class CurrencyRatesViewController: UIViewController {
         return isTypedCharsAllowed
     }
     
-    private func sortCurrencies(_ currencies: Currencies) -> [Currency] {
-        var sortedCurrencies = [Currency]()
-        
-        if let rates = currencies.rates {
-            sortedCurrencies = Array(rates)
-            sortedCurrencies.append((selectedCurrency, defaultCurrencyRateValue))
-            sortedCurrencies = sortedCurrencies.sorted { (element1, element2) -> Bool in
-                element1.key < element2.key
-            }
-        }
-        
-        return sortedCurrencies
-    }
-    
-    private func showRequestTimeOnNavigationBar() {
+    private func getCurrentDataInString() -> NSMutableAttributedString {
         date = Date()
         dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "YYYY/MM/dd HH:mm:ss"
@@ -245,10 +231,14 @@ class CurrencyRatesViewController: UIViewController {
         attributedString.append(titleText)
         attributedString.append(lastUpdatedText)
         attributedString.append(dateText)
-        
+        return attributedString
+    }
+    
+    private func showRequestTimeOnNavigationBar() {
+        let attributedDataString = getCurrentDataInString()
         DispatchQueue.main.async {
             let customNavigationBarTitle = self.navigationItem.titleView as! UILabel
-            customNavigationBarTitle.attributedText = attributedString
+            customNavigationBarTitle.attributedText = attributedDataString
         }
     }
     
@@ -266,8 +256,9 @@ class CurrencyRatesViewController: UIViewController {
                 }
             }
             
-            if let currencies = currencies, let arrayOfCurrencies = self?.sortCurrencies(currencies) {
-                self?.receivedCurrenciesRates = arrayOfCurrencies
+            if let currencies = currencies {
+                self?.receivedCurrenciesRates = currencies.sortCurrenciesRates(withSelectedCurrency: self!.selectedCurrency,
+                                                                               currencyRateValue: self!.defaultCurrencyRateValue)
                 self?.reloadDataForTableView()
             }
             
