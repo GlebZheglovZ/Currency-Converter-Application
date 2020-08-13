@@ -39,11 +39,7 @@ class CurrencyRatesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupKeyboardObservers()
-        timer = Timer.scheduledTimer(timeInterval: 1,
-                                     target: self,
-                                     selector: #selector(fetchDataFromAPI),
-                                     userInfo: nil,
-                                     repeats: true)
+        initializeTimer()
     }
     
     // MARK: - Работа с UI
@@ -117,22 +113,21 @@ class CurrencyRatesViewController: UIViewController {
         DispatchQueue.main.async {
             self.tableView.isHidden = isHidden
             self.reconnectButton.isHidden = !isHidden
-            self.activityIndicator.isHidden = self.reconnectButton.isHidden && self.tableView.isHidden ? false : true
-            isHidden ? self.activityIndicator.startAnimating() : self.activityIndicator.stopAnimating()
         }
     }
     
     private func showAlertController(withTitle title: String, message: String) {
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-            let alertAction = UIAlertAction(title: "OK", style: .default) { [weak self] (_) in
-                if self?.timer != nil {
-                    self?.timer.invalidate()
-                    self?.timer = nil
-                }
-            }
+            let alertAction = UIAlertAction(title: "OK", style: .default)
             alertController.addAction(alertAction)
-            self.present(alertController, animated: true)
+            self.present(alertController, animated: true) {
+                DispatchQueue.main.async {
+                    self.reconnectButton.isHidden = false
+                    self.activityIndicator.stopAnimating()
+                }
+                self.hideUI(true)
+            }
         }
     }
     
@@ -247,13 +242,28 @@ class CurrencyRatesViewController: UIViewController {
         }
     }
     
+    private func initializeTimer() {
+        timer = Timer.scheduledTimer(timeInterval: 1,
+                                     target: self,
+                                     selector: #selector(fetchDataFromAPI),
+                                     userInfo: nil,
+                                     repeats: true)
+    }
+    
+    private func cancelTimer() {
+        if timer != nil {
+            timer.invalidate()
+            timer = nil
+        }
+    }
+    
     // MARK: - Работа с сетью
     @objc func fetchDataFromAPI() {
         backgroundQueue.async {
             self.networkManager.getCurrenciesRates(for: self.selectedCurrency) { [weak self] (currencies, response, error) in
                 self?.showRequestTimeOnNavigationBar()
-                
                 self?.networkManager.validate(response: response, error: error) { (title, message) in
+                    self?.cancelTimer()
                     self?.showAlertController(withTitle: title, message: message)
                 }
                 
@@ -261,18 +271,23 @@ class CurrencyRatesViewController: UIViewController {
                     self?.receivedCurrenciesRates = currencies.sortCurrenciesRates(withSelectedCurrency: self!.selectedCurrency,
                                                                                    currencyRateValue: self!.defaultCurrencyRateValue)
                     self?.reloadDataForTableView()
-                    self?.timer = Timer.scheduledTimer(timeInterval: 1, target: self!, selector: #selector(self?.fetchDataFromAPI), userInfo: nil, repeats: true)
+                    self?.hideUI(false)
+                    
+                    DispatchQueue.main.async {
+                        self?.activityIndicator.stopAnimating()
+                    }
                 }
-                
-                self?.hideUI(false)
             }
         }
     }
     
     @objc func reconnectToServer() {
         reconnectButton.isHidden = true
-        hideUI(true)
+        tableView.isHidden = true
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
         fetchDataFromAPI()
+        initializeTimer()
     }
     
 }
