@@ -18,7 +18,7 @@ final class NetworkManager {
     
     // MARK: - Инициализаторы
     init() {
-        sessionConfiguration.timeoutIntervalForResource = 5
+        sessionConfiguration.timeoutIntervalForResource = 3
         sessionConfiguration.waitsForConnectivity = false
         session = URLSession(configuration: sessionConfiguration)
         queue = DispatchQueue.global(qos: .background)

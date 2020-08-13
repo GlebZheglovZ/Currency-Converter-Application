@@ -86,11 +86,11 @@ class CurrencyRatesViewController: UIViewController {
         reconnectButton.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
         reconnectButton.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         reconnectButton.isHidden = true
-        reconnectButton.backgroundColor = .systemBackground
-        reconnectButton.tintColor = .black
+        reconnectButton.backgroundColor = .systemGray
+        reconnectButton.setTitleColor(.systemBlue, for: .normal)
         reconnectButton.titleLabel?.textAlignment = .center
         reconnectButton.titleLabel?.numberOfLines = 0
-        reconnectButton.setTitle("Нажмите на экран чтобы запросить курс валют с сервера", for: .normal)
+        reconnectButton.setTitle("Tap on the screen to try fetch currency rates from API", for: .normal)
         reconnectButton.addTarget(self, action: #selector(reconnectToServer), for: .touchUpInside)
     }
     
@@ -269,17 +269,17 @@ class CurrencyRatesViewController: UIViewController {
                 self?.reloadDataForTableView()
             }
             
-            
             DispatchQueue.main.async {
                 if !(self!.activityIndicator.isHidden) {
                     self?.activityIndicator.stopAnimating()
+                    self?.tableView.isHidden = false
                 }
             }
         }
     }
     
     @objc func reconnectToServer() {
-        hideUI(false)
+        reconnectButton.isHidden = true
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
         fetchDataFromAPI()
