@@ -175,6 +175,8 @@ class CurrencyRatesViewController: UIViewController {
         if let indexPath = tableView.indexPathForRow(at: textfieldPostion) {
             selectedCurrency = receivedCurrenciesRates[indexPath.row].key
             selectedIndexPath = indexPath
+            self.tableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: true)
+            reloadDataForTableView()
         }
     }
     
