@@ -1,4 +1,4 @@
-# CurrencyConverter
+# Currency Converter Application
 
 Currency Converter
 
@@ -21,6 +21,8 @@ Functionality of Application:
   - Display the received currencies rate
   
   - Converting currencies rate in real-time
+  
+  - Network Errors Handling included
 
 # Screenshots
 
