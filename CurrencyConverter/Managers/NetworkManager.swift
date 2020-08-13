@@ -24,6 +24,7 @@ final class NetworkManager {
     
     // MARK: - Методы
     func getCurrenciesRates(for currency: String, completionHandler: @escaping (Currencies?, HTTPURLResponse?, Error?) -> Void) {
+        
         guard let url = URL(string: baseURL) else { return }
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.queryItems = [URLQueryItem(name: "base", value: currency)]

@@ -135,35 +135,19 @@ class CurrencyRatesViewController: UIViewController {
     
     private func reloadDataForTableView() {
         DispatchQueue.main.async { [weak self] in
-            // 1. Инициализируем пустой массив который будет хранить в себе IndexPath'ы отображаемых ячеек
-            var indexPathsForVisibleRows = [IndexPath]()
+            var indexPathsForVisibleRows = self?.tableView.indexPathsForVisibleRows ?? []
             
-            // 2. Пытаемся развернуть значения из tableView.indexPathaForVisibleRows
-            if let unwrappedIndexPathsForVisibleRows = self?.tableView.indexPathsForVisibleRows {
-                // 3. Присваиваем извлеченные значения в массив indexPathForVisibleRows
-                indexPathsForVisibleRows = unwrappedIndexPathsForVisibleRows
-            }
-            
-            // 4. Если indexPathForVisibleRows пустое, то просто делаем reloadData для всей таблицы
             if indexPathsForVisibleRows.isEmpty {
                 self?.tableView.reloadData()
-                // 5. В противном случае проходимся по элементам массива indexPathsForVisibleRows
             } else {
-                // 6. Используем enumerated() чтобы можно было потом выцепить нужный элемент по индексу
                 for (index, indexPath) in indexPathsForVisibleRows.enumerated() {
-                    // 7. Кастим ячейку до типа CurrencyTableViewCell
-                    if let cell = self?.tableView.cellForRow(at: indexPath) as? CurrencyTableViewCell {
-                        /* 8. Если аббревиатура валюты в ячейке совпадает с текущей валютой,
-                         то удаляем по индексу найденный элемент */
-                        if cell.currencyNameLabel.text == self?.selectedCurrency {
-                            indexPathsForVisibleRows.remove(at: index)
-                        }
+                    if indexPath == self?.selectedIndexPath {
+                        indexPathsForVisibleRows.remove(at: index)
                     }
                 }
-                
-                // 9. Перезагружаем отдельные ячейки, которые будут производить расчет на основе введенных нами данных
-                self?.tableView.reloadRows(at: indexPathsForVisibleRows, with: .none)
             }
+            
+            self?.tableView.reloadRows(at: indexPathsForVisibleRows, with: .none)
         }
     }
     
@@ -178,7 +162,6 @@ class CurrencyRatesViewController: UIViewController {
             selectedCurrency = receivedCurrenciesRates[indexPath.row].key
             selectedIndexPath = indexPath
             self.tableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: true)
-            reloadDataForTableView()
         }
     }
     
