@@ -52,7 +52,7 @@ class CurrencyRatesViewController: UIViewController {
     
     private func setupNavigationBar() {
         customNavigationBarTitleLabel.frame = CGRect(x: 0, y: 0, width: 400, height: 50)
-        customNavigationBarTitleLabel.backgroundColor = .systemBackground
+        customNavigationBarTitleLabel.backgroundColor = .clear
         customNavigationBarTitleLabel.numberOfLines = 2
         customNavigationBarTitleLabel.font = UIFont.boldSystemFont(ofSize: 16)
         customNavigationBarTitleLabel.textAlignment = .center
@@ -89,7 +89,7 @@ class CurrencyRatesViewController: UIViewController {
         reconnectButton.setTitleColor(.systemBlue, for: .normal)
         reconnectButton.titleLabel?.textAlignment = .center
         reconnectButton.titleLabel?.numberOfLines = 0
-        reconnectButton.setTitle("Tap on the screen to try fetch currency rates from API", for: .normal)
+        reconnectButton.setTitle("Tap on the screen to fetch currency rates from API", for: .normal)
         reconnectButton.addTarget(self, action: #selector(reconnectToServer), for: .touchUpInside)
     }
     
@@ -124,10 +124,8 @@ class CurrencyRatesViewController: UIViewController {
             let alertAction = UIAlertAction(title: "OK", style: .default)
             alertController.addAction(alertAction)
             self.present(alertController, animated: true) {
-                DispatchQueue.main.async {
-                    self.reconnectButton.isHidden = false
-                    self.activityIndicator.stopAnimating()
-                }
+                self.reconnectButton.isHidden = false
+                self.activityIndicator.stopAnimating()
                 self.hideUI(true)
             }
         }
@@ -152,16 +150,17 @@ class CurrencyRatesViewController: UIViewController {
     }
     
     @objc func textFieldDidChange(_ textField: UITextField) {
-        defaultCurrencyRateValue = convertTextField(textField: textField) ?? defaultCurrencyRateValue
+        defaultCurrencyRateValue = textField.convertTextFieldTextIntoDouble() ?? 0
     }
     
     @objc func textFieldDidTapped(_ textField: UITextField) {
-        defaultCurrencyRateValue = convertTextField(textField: textField) ?? defaultCurrencyRateValue
+        defaultCurrencyRateValue = textField.convertTextFieldTextIntoDouble() ?? 0
         let textfieldPostion = textField.convert(textField.bounds.origin, to: tableView)
         if let indexPath = tableView.indexPathForRow(at: textfieldPostion) {
             selectedCurrency = receivedCurrenciesRates[indexPath.row].key
             selectedIndexPath = indexPath
             self.tableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: true)
+            self.reloadDataForTableView() // ???
         }
     }
     
@@ -190,12 +189,6 @@ class CurrencyRatesViewController: UIViewController {
     }
     
     // MARK: - Сортировка/Конвертирование
-    private func convertTextField(textField: UITextField) -> Double? {
-        guard let value = textField.text else { return 0 }
-        guard let convertedValue = Double(value) else { return 0 }
-        return convertedValue
-    }
-    
     private func isCharactersAllowed(for string: String) -> Bool {
         let allowedChars = "1234567890."
         let allowedCharsSet = CharacterSet(charactersIn: allowedChars)
@@ -220,8 +213,8 @@ class CurrencyRatesViewController: UIViewController {
     }
     
     private func showRequestTimeOnNavigationBar() {
+        let attributedDataString = self.getCurrentDataInString()
         DispatchQueue.main.async {
-            let attributedDataString = self.getCurrentDataInString()
             let customNavigationBarTitle = self.navigationItem.titleView as! UILabel
             customNavigationBarTitle.attributedText = attributedDataString
         }
@@ -249,12 +242,14 @@ class CurrencyRatesViewController: UIViewController {
                 self?.showRequestTimeOnNavigationBar()
                 self?.networkManager.validate(response: response, error: error) { (title, message) in
                     self?.cancelTimer()
+                    self?.networkManager.tasks.forEach { $0.cancel() }
                     self?.showAlertController(withTitle: title, message: message)
                 }
                 
                 if let currencies = currencies {
                     self?.receivedCurrenciesRates = currencies.sortCurrenciesRates(withSelectedCurrency: self!.selectedCurrency,
                                                                                    currencyRateValue: self!.defaultCurrencyRateValue)
+                    
                     self?.reloadDataForTableView()
                     self?.hideUI(false)
                     

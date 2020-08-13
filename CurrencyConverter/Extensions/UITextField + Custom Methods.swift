@@ -36,5 +36,11 @@ extension UITextField {
                                 animated: false)
         self.inputAccessoryView = toolBar
     }
+    
+    func convertTextFieldTextIntoDouble() -> Double? {
+        guard let value = self.text else { return nil }
+        guard let convertedValue = Double(value) else { return nil }
+        return convertedValue
+    }
 
 }

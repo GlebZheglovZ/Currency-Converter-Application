@@ -14,6 +14,7 @@ final class NetworkManager {
     private let baseURL = "https://revolut.duckdns.org/latest"
     private let sessionConfiguration = URLSessionConfiguration.default
     private let session: URLSession
+    var tasks = [URLSessionDataTask]()
     
     // MARK: - Инициализаторы
     init() {
@@ -30,7 +31,7 @@ final class NetworkManager {
         components?.queryItems = [URLQueryItem(name: "base", value: currency)]
         guard let queryURL = components?.url else { return }
         
-        session.dataTask(with: queryURL) { (data, response, error) in
+        let task = session.dataTask(with: queryURL) { (data, response, error) in
             if let error = error {
                 print("Error founded: \(error.localizedDescription.capitalized)")
                 completionHandler(nil, nil, error)
@@ -46,7 +47,10 @@ final class NetworkManager {
                     print("Can't decode data for type: \(Currencies.self)")
                 }
             }
-        }.resume()
+        }
+        
+        tasks.append(task)
+        task.resume()
         
     }
     
