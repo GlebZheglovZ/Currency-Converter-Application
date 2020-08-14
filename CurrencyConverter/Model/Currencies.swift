@@ -17,9 +17,7 @@ struct Currencies: Decodable {
         if let rates = self.rates {
             sortedCurrencies = Array(rates)
             sortedCurrencies.append((selectedCurrency, currencyRateValue))
-            sortedCurrencies = sortedCurrencies.sorted { (element1, element2) -> Bool in
-                element1.key < element2.key
-            }
+            sortedCurrencies = sortedCurrencies.sorted { $0.key < $1.key }
         }
         return sortedCurrencies
     }

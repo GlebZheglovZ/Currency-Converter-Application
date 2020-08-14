@@ -138,11 +138,7 @@ class CurrencyRatesViewController: UIViewController {
             if indexPathsForVisibleRows.isEmpty {
                 self?.tableView.reloadData()
             } else {
-                for (index, indexPath) in indexPathsForVisibleRows.enumerated() {
-                    if indexPath == self?.selectedIndexPath {
-                        indexPathsForVisibleRows.remove(at: index)
-                    }
-                }
+                indexPathsForVisibleRows = indexPathsForVisibleRows.filter { $0 != self!.selectedIndexPath }
             }
             
             self?.tableView.reloadRows(at: indexPathsForVisibleRows, with: .none)
@@ -160,7 +156,7 @@ class CurrencyRatesViewController: UIViewController {
             selectedCurrency = receivedCurrenciesRates[indexPath.row].key
             selectedIndexPath = indexPath
             self.tableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: true)
-            self.reloadDataForTableView() // ???
+            self.reloadDataForTableView()
         }
     }
     
