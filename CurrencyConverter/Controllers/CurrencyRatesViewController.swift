@@ -77,7 +77,7 @@ class CurrencyRatesViewController: UIViewController {
         tableView.tableFooterView = UIView()
     }
     
-    func setupReconnectButton() {
+    private func setupReconnectButton() {
         view.addSubview(reconnectButton)
         reconnectButton.translatesAutoresizingMaskIntoConstraints = false
         reconnectButton.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
@@ -93,7 +93,7 @@ class CurrencyRatesViewController: UIViewController {
         reconnectButton.addTarget(self, action: #selector(reconnectToServer), for: .touchUpInside)
     }
     
-    func setupActivityIndicator() {
+    private func setupActivityIndicator() {
         view.addSubview(activityIndicator)
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
@@ -103,7 +103,7 @@ class CurrencyRatesViewController: UIViewController {
         activityIndicator.isHidden = true
     }
     
-    func setupUI() {
+    private func setupUI() {
         setupMainView()
         setupNavigationBar()
         setupTableView()
@@ -111,7 +111,7 @@ class CurrencyRatesViewController: UIViewController {
         setupActivityIndicator()
     }
     
-    func hideUI(_ isHidden: Bool) {
+    private func hideUI(_ isHidden: Bool) {
         DispatchQueue.main.async {
             self.tableView.isHidden = isHidden
             self.reconnectButton.isHidden = !isHidden
@@ -238,7 +238,7 @@ class CurrencyRatesViewController: UIViewController {
                 self?.showRequestTimeOnNavigationBar()
                 self?.networkManager.validate(response: response, error: error) { (title, message) in
                     self?.cancelTimer()
-                    self?.networkManager.tasks.forEach { $0.cancel() }
+                    // self?.networkManager.cancelAllTasksInProgress()
                     self?.showAlertController(withTitle: title, message: message)
                 }
                 

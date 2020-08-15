@@ -14,7 +14,7 @@ final class NetworkManager {
     private let baseURL = "https://revolut.duckdns.org/latest"
     private let sessionConfiguration = URLSessionConfiguration.default
     private let session: URLSession
-    var tasks = [URLSessionDataTask]()
+    private var tasks = [URLSessionDataTask]()
     
     // MARK: - Инициализаторы
     init() {
@@ -24,27 +24,30 @@ final class NetworkManager {
     }
     
     // MARK: - Методы
+    private func cancelAllTasksInProgress() {
+        tasks.forEach { $0.cancel() }
+    }
+    
     func getCurrenciesRates(for currency: String, completionHandler: @escaping (Currencies?, HTTPURLResponse?, Error?) -> Void) {
-        
+        print("TASKS COUNT: \(tasks.count)")
         guard let url = URL(string: baseURL) else { return }
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.queryItems = [URLQueryItem(name: "base", value: currency)]
         guard let queryURL = components?.url else { return }
         
-        let task = session.dataTask(with: queryURL) { (data, response, error) in
+        let task = session.dataTask(with: queryURL) { [weak self] (data, response, error) in
             if let error = error {
-                print("Error founded: \(error.localizedDescription.capitalized)")
+                self?.cancelAllTasksInProgress()
                 completionHandler(nil, nil, error)
             } else if let receivedResponse = response as? HTTPURLResponse,
                 (200..<300) ~= receivedResponse.statusCode,
                 let receivedData = data {
                 if let json = try? JSONDecoder().decode(Currencies.self, from: receivedData) {
-                    print("\nReceived data: \(receivedData)")
-                    print("Response status code: \(receivedResponse.statusCode)")
-                    print("Received JSON successfully decoded into \(Currencies.self) type\n")
+                    self?.tasks.removeAll()
                     completionHandler(json, nil, nil)
                 } else {
                     print("Can't decode data for type: \(Currencies.self)")
+                    self?.cancelAllTasksInProgress()
                 }
             }
         }
