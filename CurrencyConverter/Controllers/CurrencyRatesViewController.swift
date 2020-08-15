@@ -134,29 +134,27 @@ class CurrencyRatesViewController: UIViewController {
     private func reloadDataForTableView() {
         DispatchQueue.main.async { [weak self] in
             var indexPathsForVisibleRows = self?.tableView.indexPathsForVisibleRows ?? []
-            
             if indexPathsForVisibleRows.isEmpty {
                 self?.tableView.reloadData()
             } else {
                 indexPathsForVisibleRows = indexPathsForVisibleRows.filter { $0 != self!.selectedIndexPath }
             }
-            
             self?.tableView.reloadRows(at: indexPathsForVisibleRows, with: .none)
         }
     }
     
-    @objc func textFieldDidChange(_ textField: UITextField) {
+    @objc private func textFieldDidChange(_ textField: UITextField) {
         defaultCurrencyRateValue = textField.convertTextFieldTextIntoDouble() ?? 0
     }
     
-    @objc func textFieldDidTapped(_ textField: UITextField) {
+    @objc private func textFieldDidTapped(_ textField: UITextField) {
         defaultCurrencyRateValue = textField.convertTextFieldTextIntoDouble() ?? 0
         let textfieldPostion = textField.convert(textField.bounds.origin, to: tableView)
         if let indexPath = tableView.indexPathForRow(at: textfieldPostion) {
             selectedCurrency = receivedCurrenciesRates[indexPath.row].key
             selectedIndexPath = indexPath
-            self.tableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: true)
-            self.reloadDataForTableView()
+            self.tableView.scrollToRow(at: selectedIndexPath, at: .top, animated: true)
+            // self.reloadDataForTableView()
         }
     }
     
@@ -165,7 +163,7 @@ class CurrencyRatesViewController: UIViewController {
         textfield.addTarget(self, action: #selector(textFieldDidTapped(_:)), for: UIControl.Event.editingDidBegin)
     }
     
-    @objc func keyboardWillShow(notification: NSNotification) {
+    @objc private func keyboardWillShow(notification: NSNotification) {
         if let keyboardHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height {
             UIView.animate(withDuration: 0.2, animations: {
                 self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
@@ -173,7 +171,7 @@ class CurrencyRatesViewController: UIViewController {
         }
     }
     
-    @objc func keyboardWillHide(notification: NSNotification) {
+    @objc private func keyboardWillHide(notification: NSNotification) {
         UIView.animate(withDuration: 0.2, animations: {
             self.tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         })
