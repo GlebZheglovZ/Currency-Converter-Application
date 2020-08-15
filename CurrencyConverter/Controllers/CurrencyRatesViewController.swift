@@ -153,8 +153,8 @@ class CurrencyRatesViewController: UIViewController {
         if let indexPath = tableView.indexPathForRow(at: textfieldPostion) {
             selectedCurrency = receivedCurrenciesRates[indexPath.row].key
             selectedIndexPath = indexPath
-            self.tableView.scrollToRow(at: selectedIndexPath, at: .top, animated: true)
-            // self.reloadDataForTableView()
+            self.tableView.scrollToRow(at: selectedIndexPath, at: .middle, animated: true)
+            self.reloadDataForTableView()
         }
     }
     
@@ -236,7 +236,6 @@ class CurrencyRatesViewController: UIViewController {
                 self?.showRequestTimeOnNavigationBar()
                 self?.networkManager.validate(response: response, error: error) { (title, message) in
                     self?.cancelTimer()
-                    // self?.networkManager.cancelAllTasksInProgress()
                     self?.showAlertController(withTitle: title, message: message)
                 }
                 
